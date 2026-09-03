@@ -1608,9 +1608,9 @@ h1, h2, h3, h4 {
 /* Footer */
 .main-footer {
     background: #050B1B;
-    border-top: 1px solid var(--border-glass);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
     padding: 60px 0 28px;
-    color: var(--text-muted);
+    color: #94A3B8;
 }
 
 .footer-top {
@@ -1632,8 +1632,9 @@ h1, h2, h3, h4 {
     font-size: 0.95rem;
 }
 
+.main-footer .brand-name,
 .footer-top h4 {
-    color: var(--text-heading);
+    color: #F1F5F9;
     font-size: 1.05rem;
     margin-bottom: 16px;
     font-family: var(--font-body);
@@ -1648,10 +1649,12 @@ h1, h2, h3, h4 {
     font-size: 0.88rem;
 }
 
+.main-footer a,
 .footer-top ul li a {
-    color: var(--text-muted);
+    color: #94A3B8;
 }
 
+.main-footer a:hover,
 .footer-top ul li a:hover {
     color: var(--primary-gold);
 }
