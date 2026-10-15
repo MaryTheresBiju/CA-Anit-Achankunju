@@ -477,8 +477,9 @@ function initServiceFilters() {
             const filter = btn.dataset.filter;
 
             serviceCards.forEach(card => {
-                const category = card.dataset.category;
-                if (filter === 'all' || category === filter) {
+                const category = card.dataset.category || '';
+                const categories = category.split(' ');
+                if (filter === 'all' || categories.includes(filter)) {
                     card.style.display = 'flex';
                 } else {
                     card.style.display = 'none';
