@@ -1,5 +1,6 @@
 // ==========================================================================
 // CA ANIT ACHANKUNJU & CO. - INTERACTIVE WEBSITE LOGIC
+// Dynamic utilities, tax estimator, split service showcase, modals, filters
 // ==========================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -7,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initMobileNav();
     initTaxCalculator();
     initServiceFilters();
+    initSplitServiceShowcase();
+    initDueDatesFilter();
     initFaqAccordion();
     initConsultationForm();
     initScrollSpy();
@@ -14,14 +17,15 @@ document.addEventListener('DOMContentLoaded', () => {
     updateYear();
 });
 
-// 1. Theme Switcher (Dark / Light Mode)
+// 1. Theme Switcher (Light / Dark Mode with ca-agarwal style defaults)
 function initThemeToggle() {
     const themeBtn = document.getElementById('themeToggleBtn');
+    if (!themeBtn) return;
     const themeText = document.getElementById('themeText');
     const themeIcon = themeBtn.querySelector('i');
     
-    // Check local storage or system preference
-    const savedTheme = localStorage.getItem('ca_theme') || 'dark';
+    // Check local storage or default to light theme (clean corporate style like ca-agarwal)
+    const savedTheme = localStorage.getItem('ca_theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
     updateThemeUI(savedTheme);
 
@@ -31,37 +35,71 @@ function initThemeToggle() {
         document.documentElement.setAttribute('data-theme', newTheme);
         localStorage.setItem('ca_theme', newTheme);
         updateThemeUI(newTheme);
-        showToast(`Switched to ${newTheme === 'dark' ? 'Dark Executive' : 'Crisp Light'} Mode`, 'info');
+        showToast(`Switched to ${newTheme === 'dark' ? 'Dark Luxury' : 'Corporate Light'} Theme`, 'info');
     });
 
     function updateThemeUI(theme) {
         if (theme === 'dark') {
-            themeIcon.className = 'fa-solid fa-moon';
-            themeText.textContent = 'Dark Mode';
-        } else {
             themeIcon.className = 'fa-solid fa-sun';
-            themeText.textContent = 'Light Mode';
+            themeText.textContent = 'Light Theme';
+        } else {
+            themeIcon.className = 'fa-solid fa-moon';
+            themeText.textContent = 'Dark Theme';
         }
     }
 }
 
-// 2. Mobile Menu Toggle
+// 2. Mobile Drawer Navigation & Backdrop Management
 function initMobileNav() {
     const menuBtn = document.getElementById('mobileMenuBtn');
     const navMenu = document.getElementById('navMenu');
-    
-    menuBtn.addEventListener('click', () => {
-        navMenu.classList.toggle('active');
-        const isActive = navMenu.classList.contains('active');
-        menuBtn.querySelector('i').className = isActive ? 'fa-solid fa-xmark' : 'fa-solid fa-bars';
+    const navBackdrop = document.getElementById('navBackdrop');
+    const navCloseBtn = document.getElementById('navCloseBtn');
+    if (!menuBtn || !navMenu) return;
+
+    function openMenu() {
+        navMenu.classList.add('active');
+        if (navBackdrop) navBackdrop.classList.add('active');
+        document.body.classList.add('nav-open');
+        const icon = menuBtn.querySelector('i');
+        if (icon) icon.className = 'fa-solid fa-xmark';
+    }
+
+    function closeMenu() {
+        navMenu.classList.remove('active');
+        if (navBackdrop) navBackdrop.classList.remove('active');
+        document.body.classList.remove('nav-open');
+        const icon = menuBtn.querySelector('i');
+        if (icon) icon.className = 'fa-solid fa-bars';
+    }
+
+    menuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (navMenu.classList.contains('active')) {
+            closeMenu();
+        } else {
+            openMenu();
+        }
     });
 
-    // Close on menu link click
+    if (navCloseBtn) {
+        navCloseBtn.addEventListener('click', closeMenu);
+    }
+
+    if (navBackdrop) {
+        navBackdrop.addEventListener('click', closeMenu);
+    }
+
+    // Close on any menu link click
     document.querySelectorAll('.nav-link').forEach(link => {
-        link.addEventListener('click', () => {
-            navMenu.classList.remove('active');
-            menuBtn.querySelector('i').className = 'fa-solid fa-bars';
-        });
+        link.addEventListener('click', closeMenu);
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && navMenu.classList.contains('active')) {
+            closeMenu();
+        }
     });
 }
 
@@ -177,11 +215,145 @@ function initTaxCalculator() {
     }
 }
 
-// 4. Service Filtering & Detail Modals
+// 4. Split Service Showcase (Pure Vector & Icons - No Photos)
+const splitShowcaseData = [
+    {
+        title: "Tax Planning, Advisory & Compliance",
+        icon: "fa-scale-balanced",
+        description: "Proactive tax planning enabling businesses and individuals to legally structure transactions, investments, and corporate entities for maximum statutory efficiency and full compliance.",
+        highlights: [
+            "Corporate restructuring for LLPs, Pvt Ltd & Startups",
+            "Capital Gains & Real Estate transaction structuring",
+            "Old vs New Tax Regime salary optimization for companies"
+        ],
+        ctaText: "Consult On Tax Planning"
+    },
+    {
+        title: "Income Tax Litigation & Scrutiny Defense",
+        icon: "fa-gavel",
+        description: "Authoritative technical representation before Income Tax Assessing Officers, Faceless Assessment Centers, and CIT(Appeals). Comprehensive defense against notices issued under Sections 142(1), 143(2), 147, and 148.",
+        highlights: [
+            "Scrutiny & Reassessment notice response drafting",
+            "Faceless assessment submissions & representation",
+            "Penalty proceedings defense and rectification u/s 154"
+        ],
+        ctaText: "Review My Tax Notice"
+    },
+    {
+        title: "Audit, Attestation, Certification & Due Diligence",
+        icon: "fa-clipboard-check",
+        description: "Independent audit of financial statements ensuring strict compliance with the Companies Act 2013 and Section 44AB Tax Audit requirements. Objective evaluation of internal financial controls.",
+        highlights: [
+            "Comprehensive Section 44AB Tax Audits & Form 3CD",
+            "Statutory Company Audits & Independent Auditor Reports",
+            "Internal Financial Controls (IFC) testing & risk matrix"
+        ],
+        ctaText: "Schedule Audit Engagement"
+    },
+    {
+        title: "Virtual CFO & Management Office",
+        icon: "fa-user-tie",
+        description: "High-level strategic financial leadership for growing enterprises, funded startups, and mid-sized companies. End-to-end working capital oversight, budgeting, and boardroom reporting.",
+        highlights: [
+            "Strategic cash flow forecasting & working capital control",
+            "Monthly Executive MIS decks and KPI benchmarking",
+            "Financial feasibility models & investor presentation support"
+        ],
+        ctaText: "Engage Virtual CFO"
+    },
+    {
+        title: "Remote Global Accounting & Bookkeeping",
+        icon: "fa-globe",
+        description: "Dedicated cross-border virtual accounting desk providing real-time bookkeeping, ledger maintenance, bank reconciliation, and audit support for entities across India, US, UK, UAE, and Singapore.",
+        highlights: [
+            "Seamless cloud software (QuickBooks, Xero, Zoho, Tally)",
+            "Cross-border transaction & DTAA compliance support",
+            "Strict data privacy, MFA protocols & NDA guarantees"
+        ],
+        ctaText: "Setup Remote Accounting"
+    },
+    {
+        title: "Business Re-organizing & Restructuring",
+        icon: "fa-sitemap",
+        description: "Advising founders and corporate boards on entity restructuring, conversion of partnership firms to private limited companies, capital reduction, and regulatory compliance under corporate law.",
+        highlights: [
+            "LLP to Private Limited entity conversions",
+            "Internal control diagnostic review & leak prevention",
+            "Standard Operating Procedures (SOPs) for finance teams"
+        ],
+        ctaText: "Discuss Business Restructure"
+    }
+];
+
+function initSplitServiceShowcase() {
+    const tabs = document.querySelectorAll('.service-pill-tab');
+    const spTitle = document.getElementById('spTitle');
+    const spDesc = document.getElementById('spDesc');
+    const spIcon = document.getElementById('spIcon');
+    const spHighlights = document.getElementById('spHighlights');
+    const spCta = document.getElementById('spCta');
+
+    if (!tabs.length || !spTitle) return;
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            const idx = parseInt(tab.dataset.serviceIdx, 10);
+            const data = splitShowcaseData[idx];
+            if (!data) return;
+
+            // Smoothly update showcase content
+            spTitle.textContent = data.title;
+            spDesc.textContent = data.description;
+            if (spIcon && data.icon) {
+                spIcon.className = `fa-solid ${data.icon}`;
+            }
+
+            spHighlights.innerHTML = data.highlights
+                .map(h => `<li><i class="fa-solid fa-check-circle"></i> ${h}</li>`)
+                .join('');
+
+            spCta.innerHTML = `<i class="fa-solid fa-envelope"></i> ${data.ctaText}`;
+            spCta.onclick = (e) => {
+                prefillQuerySubject(data.title);
+            };
+        });
+    });
+}
+
+// 5. Statutory Compliance Due Dates Filtering
+function initDueDatesFilter() {
+    const filterBtns = document.querySelectorAll('.due-filter-btn');
+    const tableRows = document.querySelectorAll('#dueDatesTableBody tr');
+
+    if (!filterBtns.length) return;
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const filter = btn.dataset.dueFilter;
+
+            tableRows.forEach(row => {
+                const cat = row.dataset.cat;
+                if (filter === 'all' || cat === filter) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    });
+}
+
+// 6. Comprehensive Service Filtering & Detail Modals
 const serviceData = [
     {
         title: "Income Tax Assessments & Litigation Support",
-        category: "Income Tax & Assessment",
+        category: "Taxation & Litigation",
         icon: "fa-gavel",
         description: "Navigating income tax notices and scrutiny assessments requires authoritative technical representation. CA Anit Achankunju brings deep litigation experience to protect client interests before Income Tax Authorities.",
         benefits: [
@@ -191,11 +363,11 @@ const serviceData = [
             "Stay of demand petitions and penalty waiver applications",
             "Rectifications of errors u/s 154 and refund processing resolution"
         ],
-        deliverable: "Comprehensive legal defense, notice response documentation, and representation representation records."
+        deliverable: "Comprehensive legal defense, notice response documentation, and representation records."
     },
     {
         title: "Income Tax Audits & Tax Compliance",
-        category: "Tax Compliance",
+        category: "Taxation & Litigation",
         icon: "fa-file-invoice-dollar",
         description: "Statutory tax compliance and audits u/s 44AB are executed with meticulous scrutiny to ensure zero regulatory penalties and complete alignment with ICAI auditing standards.",
         benefits: [
@@ -223,7 +395,7 @@ const serviceData = [
     },
     {
         title: "Accounting & Bookkeeping Services",
-        category: "Accounting",
+        category: "Advisory & Review",
         icon: "fa-book-journal-whills",
         description: "We provide robust, timely, and organized bookkeeping services tailored to startups, growing businesses, and established enterprises in Bangalore and beyond.",
         benefits: [
@@ -237,7 +409,7 @@ const serviceData = [
     },
     {
         title: "Tax Planning & Advisory",
-        category: "Tax Advisory",
+        category: "Taxation & Litigation",
         icon: "fa-chart-line",
         description: "Proactive tax planning enables businesses and high-net-worth individuals to legally structure transactions, investments, and corporate entities for maximum tax efficiency.",
         benefits: [
@@ -251,7 +423,7 @@ const serviceData = [
     },
     {
         title: "Financial & Management Advisory",
-        category: "Management Advisory",
+        category: "Advisory & Review",
         icon: "fa-chess-knight",
         description: "Beyond routine numbers, we serve as financial sounding boards to help founders and executive teams make data-driven strategic decisions.",
         benefits: [
@@ -265,7 +437,7 @@ const serviceData = [
     },
     {
         title: "Business & Accounting Process Reviews",
-        category: "Process Review",
+        category: "Advisory & Review",
         icon: "fa-magnifying-glass-chart",
         description: "Comprehensive diagnostic reviews of your financial workflows, internal checks, and operational accounting setup to eliminate revenue leakage.",
         benefits: [
@@ -278,8 +450,8 @@ const serviceData = [
         deliverable: "Diagnostic Process Review Report, Risk Matrix, and Actionable SOP Manual."
     },
     {
-        title: "Virtual Accounting & Remote Finance Support",
-        category: "Remote & International",
+        title: "Virtual CFO & Remote Finance Support",
+        category: "Virtual & Remote Support",
         icon: "fa-globe",
         description: "Our firm operates a dedicated virtual finance desk providing seamless accounting, audit support, and tax planning to domestic and international clients in US, UK, UAE, and SEA.",
         benefits: [
@@ -334,18 +506,18 @@ function openServiceModal(index) {
         <p class="modal-body-desc">${data.description}</p>
         
         <div class="modal-list">
-            <h4>Key Deliverables &amp; Benefits:</h4>
+            <h4>Key Deliverables &amp; Scope:</h4>
             <ul>${benefitsHTML}</ul>
         </div>
         
-        <div class="modal-deliverable-box glass-card" style="padding:16px; margin-bottom:24px; border-left:3px solid var(--primary-gold);">
-            <strong style="color:var(--primary-gold); display:block; font-size:0.85rem;">PRIMARY DELIVERABLE:</strong>
-            <span style="font-size:0.9rem;">${data.deliverable}</span>
+        <div style="background:var(--maroon-subtle); padding:16px; margin-bottom:24px; border-radius:8px; border-left:3px solid var(--gold-primary);">
+            <strong style="color:var(--maroon-primary); display:block; font-size:0.85rem;">PRIMARY DELIVERABLE:</strong>
+            <span style="font-size:0.9rem; color:var(--text-body);">${data.deliverable}</span>
         </div>
 
-        <div style="display:flex; gap:12px; flex-wrap:wrap;">
-            <a href="#consultation" onclick="closeServiceModal(); selectServiceOption('${data.title}')" class="btn btn-primary btn-block">
-                Inquire About This Service <i class="fa-solid fa-paper-plane"></i>
+        <div>
+            <a href="#contact" onclick="closeServiceModal(); prefillQuerySubject('${data.title}');" class="btn btn-gold btn-block">
+                Inquire About This Engagement <i class="fa-solid fa-paper-plane"></i>
             </a>
         </div>
     `;
@@ -356,30 +528,76 @@ function openServiceModal(index) {
 
 function closeServiceModal() {
     const modal = document.getElementById('serviceModal');
-    modal.classList.remove('active');
-    document.body.style.overflow = 'auto';
-}
-
-function selectServiceOption(serviceName) {
-    const select = document.getElementById('serviceRequired');
-    if (!select) return;
-    
-    for (let i = 0; i < select.options.length; i++) {
-        if (select.options[i].text.includes(serviceName) || select.options[i].value.includes(serviceName)) {
-            select.selectedIndex = i;
-            break;
-        }
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
     }
 }
 
-// Close modal when clicking outside card
-document.getElementById('serviceModal')?.addEventListener('click', (e) => {
-    if (e.target.id === 'serviceModal') {
+// 7. Modal Handlers for ca-agarwal Utility Features
+function openTimesheetModal() {
+    const modal = document.getElementById('timesheetModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeTimesheetModal() {
+    const modal = document.getElementById('timesheetModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+}
+
+function openWhatsNewModal() {
+    const modal = document.getElementById('whatsNewModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeWhatsNewModal() {
+    const modal = document.getElementById('whatsNewModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+}
+
+// Global modal overlay outside-click close
+window.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal-overlay')) {
         closeServiceModal();
+        closeTimesheetModal();
+        closeWhatsNewModal();
     }
 });
 
-// 5. FAQ Accordion & Live Search
+function prefillQuerySubject(subjectName) {
+    const select = document.getElementById('serviceRequired');
+    if (select) {
+        let matched = false;
+        for (let i = 0; i < select.options.length; i++) {
+            if (select.options[i].text.includes(subjectName) || select.options[i].value.includes(subjectName)) {
+                select.selectedIndex = i;
+                matched = true;
+                break;
+            }
+        }
+        if (!matched && select.options.length > 0) {
+            select.selectedIndex = 1; // Default to first active service option
+        }
+    }
+    const contactSection = document.getElementById('contact');
+    if (contactSection) {
+        contactSection.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+// 8. FAQ Accordion & Live Search
 function initFaqAccordion() {
     const faqItems = document.querySelectorAll('.faq-item');
     const searchInput = document.getElementById('faqSearchInput');
@@ -410,7 +628,7 @@ function initFaqAccordion() {
     }
 }
 
-// 6. Consultation Form Handling
+// 9. Consultation Form Handling
 function initConsultationForm() {
     const form = document.getElementById('consultationForm');
     if (!form) return;
@@ -421,6 +639,7 @@ function initConsultationForm() {
         const name = document.getElementById('clientName').value.trim();
         const email = document.getElementById('clientEmail').value.trim();
         const phone = document.getElementById('clientPhone').value.trim();
+        const city = document.getElementById('clientCity')?.value.trim() || 'Bangalore';
         const service = document.getElementById('serviceRequired').value;
         const message = document.getElementById('clientMessage').value.trim();
 
@@ -429,18 +648,19 @@ function initConsultationForm() {
             return;
         }
 
-        // Generate Mailto Link as fallback direct communication
-        const mailtoSubject = encodeURIComponent(`New Client Inquiry: ${service} - ${name}`);
+        // Generate Mailto Link as direct communication fallback
+        const mailtoSubject = encodeURIComponent(`Client Inquiry (${service}) - ${name}`);
         const mailtoBody = encodeURIComponent(
             `Client Name: ${name}\n` +
             `Email: ${email}\n` +
             `Phone: ${phone}\n` +
+            `Location / City: ${city}\n` +
             `Requested Service: ${service}\n\n` +
-            `Message / Requirement:\n${message}\n\n` +
-            `-- Sent via Website Consultation Portal --`
+            `Inquiry Details:\n${message}\n\n` +
+            `-- Sent via CA Anit Achankunju Official Website --`
         );
 
-        showToast('Inquiry captured! Launching email client for caanitco@gmail.com...', 'success');
+        showToast('Inquiry captured! Launching email to caanitco@gmail.com...', 'success');
 
         setTimeout(() => {
             window.location.href = `mailto:caanitco@gmail.com?subject=${mailtoSubject}&body=${mailtoBody}`;
@@ -449,7 +669,7 @@ function initConsultationForm() {
     });
 }
 
-// 7. ScrollSpy Active Nav Link
+// 10. ScrollSpy Active Nav Link
 function initScrollSpy() {
     const sections = document.querySelectorAll('section[id]');
     const navLinks = document.querySelectorAll('.nav-link');
@@ -475,32 +695,32 @@ function initScrollSpy() {
     });
 }
 
-// 8. Animated Counters
+// 11. Animated Counters for Wireframe Stats Box
 function initCounters() {
-    const stats = document.querySelectorAll('.stat-num[data-target]');
+    const stats = document.querySelectorAll('.stat-wire-number[data-target]');
     let animated = false;
 
     window.addEventListener('scroll', () => {
         if (animated) return;
-        const heroSection = document.getElementById('hero');
-        if (!heroSection) return;
+        const ribbon = document.querySelector('.stats-ribbon');
+        if (!ribbon) return;
 
-        const rect = heroSection.getBoundingClientRect();
+        const rect = ribbon.getBoundingClientRect();
         if (rect.top <= window.innerHeight && rect.bottom >= 0) {
             animated = true;
             stats.forEach(stat => {
                 const target = parseFloat(stat.getAttribute('data-target'));
                 let count = 0;
-                const speed = 20;
-                const increment = target / 30;
+                const speed = 25;
+                const increment = Math.max(1, Math.ceil(target / 25));
 
                 const timer = setInterval(() => {
                     count += increment;
                     if (count >= target) {
-                        stat.textContent = target % 1 === 0 ? target + '+' : target + '+';
+                        stat.textContent = target + '+';
                         clearInterval(timer);
                     } else {
-                        stat.textContent = count.toFixed(target % 1 === 0 ? 0 : 1) + '+';
+                        stat.textContent = count + '+';
                     }
                 }, speed);
             });
@@ -533,7 +753,7 @@ function showToast(message, type = 'info') {
     if (type === 'success') iconClass = 'fa-circle-check';
     if (type === 'error') iconClass = 'fa-circle-exclamation';
 
-    toast.innerHTML = `<i class="fa-solid ${iconClass}" style="color:var(--primary-gold);"></i> <span>${message}</span>`;
+    toast.innerHTML = `<i class="fa-solid ${iconClass}" style="color:var(--gold-primary);"></i> <span>${message}</span>`;
     container.appendChild(toast);
 
     setTimeout(() => {
