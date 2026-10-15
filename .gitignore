@@ -1,0 +1,5 @@
+assets/
+portfolio/
+.vscode/
+.idea/
+*.log
